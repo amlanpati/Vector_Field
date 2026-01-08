@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vector Flow Field - theAmlanPati</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, particles;
+        const particleCount = 1500;
+        const fieldScale = 50; // Size of each grid cell
+        const stepSize = 2;    // How fast particles move
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = [];
+            
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+            // Clear background once
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.prevX = this.x;
+                this.prevY = this.y;
+                // Randomize color for visual appeal
+                this.color = `hsl(${Math.random() * 60 + 180}, 80%, 60%)`; 
+            }
+
+            update() {
+                this.prevX = this.x;
+                this.prevY = this.y;
+
+                // THE PHYSICS: Vector Field Lookup
+                // We use trig functions based on coordinates to get a "smooth" angle
+                let angle = (Math.sin(this.x / fieldScale) + Math.cos(this.y / fieldScale)) * Math.PI;
+
+                // Convert angle to velocity (Vector Math)
+                this.x += Math.cos(angle) * stepSize;
+                this.y += Math.sin(angle) * stepSize;
+
+                // Handle Screen Edges
+                if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 1;
+                ctx.moveTo(this.prevX, this.prevY);
+                ctx.lineTo(this.x, this.y);
+                ctx.stroke();
+            }
+        }
+
+        function animate() {
+            // The "Magic" Trail Effect: 
+            // Instead of clearing, we draw a faint black rectangle
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, width, height);
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        animate();
+    </script>
+</body>
+</html>
